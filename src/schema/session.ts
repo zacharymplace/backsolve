@@ -1,0 +1,19 @@
+import { z } from "zod";
+
+export const SessionSchema = z.object({
+  id: z.string(),
+  objective: z.string(),
+  created_at: z.string(),
+  chats: z.array(z.string()).default([]),
+  diffs: z.array(z.string()).default([]),
+  tests: z.array(z.object({
+    command: z.string(),
+    output: z.string(),
+    captured_at: z.string()
+  })).default([]),
+  decisions: z.array(z.string()).default([]),
+  risks: z.array(z.string()).default([]),
+  notes: z.array(z.string()).default([])
+});
+
+export type Session = z.infer<typeof SessionSchema>;

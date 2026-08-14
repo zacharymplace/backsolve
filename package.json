@@ -1,0 +1,27 @@
+{
+  "name": "backsolve",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Local-first AI work reconstruction engine.",
+  "type": "module",
+  "bin": {
+    "backsolve": "dist/cli.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx src/cli.ts",
+    "check": "npm run build && npm run validate && npm run demo",
+    "validate": "tsx src/validate/validateProject.ts",
+    "demo": "tsx src/cli.ts demo"
+  },
+  "dependencies": {
+    "commander": "^12.1.0",
+    "zod": "^3.24.1",
+    "yaml": "^2.6.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  }
+}
