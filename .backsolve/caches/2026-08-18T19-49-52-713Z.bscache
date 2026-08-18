@@ -1,0 +1,110 @@
+{
+  "bscache_version": "0.1",
+  "exported_at": "2026-08-18T19:52:53.576Z",
+  "whyfile": {
+    "schema_version": "0.1",
+    "objective": "Implement Whyfile core: chat import, diff scan, decision/risk capture, whyfile synthesis, cache export",
+    "outcome": "Implemented and validated the full Whyfile core: chat import, diff scan, test capture, decision/risk capture, whyfile synthesis (against the existing .why.md convention), and cache export. This session is itself the first real end-to-end Whyfile.",
+    "context_used": [
+      "chat: /private/tmp/claude-501/-Users-zplace-dev/a70d8ee2-22b1-4cac-bdf3-4a2b9302f375/scratchpad/backsolve-chat-transcript.md"
+    ],
+    "files_changed": [
+      "src/cli.ts",
+      "src/schema/session.ts",
+      "src/storage/projectStore.ts"
+    ],
+    "decisions": [
+      {
+        "decision": "Store Whyfiles as .why.md with an embedded yaml block, not raw JSON",
+        "rationale": "src/validate/validateProject.ts already existed and expected this exact format (a fenced yaml block matched by regex); matching it instead of introducing a second format was the smallest correct patch",
+        "evidence": [
+          "src/validate/validateProject.ts"
+        ],
+        "confidence": "confirmed",
+        "status": "accepted"
+      },
+      {
+        "decision": "No LLM/AI synthesis step for Whyfile generation",
+        "rationale": "package.json has no LLM/API client dependency (only commander, zod, yaml), and the README states v0.1 is local-first; decisions and risks are captured via structured CLI flags as work happens, and whyfile assembly is a deterministic mapping, not inference",
+        "evidence": [
+          "package.json"
+        ],
+        "confidence": "confirmed",
+        "status": "accepted"
+      },
+      {
+        "decision": "reconstruction_confidence is a deterministic penalty formula, not a model score",
+        "rationale": "starts at 1.0 and subtracts fixed penalties for missing tests, failed tests, weak-confidence decisions, no imported chat, and no scanned diff, floored at 0 -- transparent and auditable rather than opaque",
+        "evidence": [
+          "src/core/whyfileBuilder.ts"
+        ],
+        "confidence": "confirmed",
+        "status": "accepted"
+      },
+      {
+        "decision": "Exclude paths under .backsolve/ from files_changed",
+        "rationale": "the first real whyfile run surfaced .backsolve/current-session in files_changed -- Backsolve's own session bookkeeping is tracked in git but isn't part of the work being reconstructed, so it was noise",
+        "evidence": [
+          "src/core/whyfileBuilder.ts"
+        ],
+        "confidence": "confirmed",
+        "status": "accepted"
+      }
+    ],
+    "validation": [
+      {
+        "command": "npx tsc --noEmit",
+        "result": "pass",
+        "evidence": ""
+      },
+      {
+        "command": "npx tsc --noEmit",
+        "result": "pass",
+        "evidence": ""
+      }
+    ],
+    "risks": [
+      {
+        "risk": "SessionSchema was extended (outcome, unresolved_questions, next_actions, tests[].exit_code) while two real session files from 2026-05-14 already exist on disk in the old shape",
+        "severity": "medium",
+        "mitigation": "all new fields use zod .default() or .optional(), so SessionSchema.parse() on the old files fills them in without error -- did not need to migrate the existing files",
+        "status": "resolved"
+      },
+      {
+        "risk": "add-decision/add-risk/set-outcome/add-question/add-next-action are not mentioned in the README's quickstart",
+        "severity": "low",
+        "mitigation": "README needs a follow-up update to document the full real command set once this lands",
+        "status": "open"
+      }
+    ],
+    "unresolved_questions": [],
+    "next_actions": [
+      "Update README's quickstart to document add-decision, add-risk, set-outcome, add-question, and add-next-action alongside the commands already listed",
+      "Consider whether cache export should bundle referenced evidence files (e.g. the imported chat file itself) rather than only its content"
+    ],
+    "reconstruction_confidence": 1
+  },
+  "evidence": {
+    "chats": [
+      "# source: /private/tmp/claude-501/-Users-zplace-dev/a70d8ee2-22b1-4cac-bdf3-4a2b9302f375/scratchpad/backsolve-chat-transcript.md\n\n# Chat transcript: Backsolve Whyfile core\n\n**User:** scope it out\n\n**Assistant:** Investigated the backsolve repo. Found that the README's quickstart\n(`import-chat`, `scan-diff`, `add-test`, `whyfile`, `cache export`) describes commands\nthat do not exist in `src/cli.ts` -- only `init`/`capture`/`review`/`demo` are\nimplemented. `src/core` and `src/adapters` were empty directories. The Whyfile schema\n(`src/schema/whyfile.ts`) was fully designed via zod but nothing produced one yet.\nChecked `package.json` dependencies (`commander`, `zod`, `yaml` -- no LLM/API client)\nand concluded the tool is meant to be local-first, structured, manually-narrated\ncapture, not AI-inferred synthesis from raw chat text.\n\nProposed a scope: implement `import-chat`, `scan-diff`, `add-test`, `add-decision`,\n`add-risk`, `set-outcome`, `add-question`, `add-next-action`, `whyfile`, and\n`cache export`, mapped onto the existing `WhyfileSchema`. Flagged four open decisions:\n(1) confirm no-LLM synthesis, (2) add new commands beyond the README's quickstart,\n(3) `.bscache` as a plain JSON bundle vs. a real archive, (4) a deterministic formula\nfor `reconstruction_confidence`.\n\n**User:** yes\n\n**Assistant:** Proceeded with the proposed defaults. Extended `SessionSchema` with\n`outcome`, `unresolved_questions`, `next_actions`, and an `exit_code` field on\n`tests[]`. Built `src/core/chatImport.ts`, `diffScan.ts`, `testCapture.ts`,\n`decisionCapture.ts`, `riskCapture.ts`, and `whyfileBuilder.ts`. While wiring the\nbuild step, discovered `src/validate/validateProject.ts` already expected Whyfiles\nas `.why.md` files with an embedded ```` ```yaml ```` block, not raw JSON -- corrected\nthe design to match that pre-existing convention instead of the originally planned\nplain-JSON output. Wired all new commands into `src/cli.ts`, including a nested\n`cache export` subcommand matching the README's documented syntax.\n"
+    ],
+    "diffs": [
+      "# scope: working tree\n\ndiff --git a/.backsolve/current-session b/.backsolve/current-session\nindex 78424b2..6cacea6 100644\n--- a/.backsolve/current-session\n+++ b/.backsolve/current-session\n@@ -1 +1 @@\n-2026-05-14T22-08-23-645Z\n\\ No newline at end of file\n+2026-08-18T19-49-52-713Z\n\\ No newline at end of file\ndiff --git a/src/cli.ts b/src/cli.ts\nindex 44e4735..fb83b34 100644\n--- a/src/cli.ts\n+++ b/src/cli.ts\n@@ -1,9 +1,20 @@\n #!/usr/bin/env node\n import { Command } from \"commander\";\n-import { ensureProject, createSession, getCurrentSession } from \"./storage/projectStore.js\";\n+import { ensureProject, createSession, getCurrentSession, saveSession } from \"./storage/projectStore.js\";\n+import { importChat } from \"./core/chatImport.js\";\n+import { scanDiff } from \"./core/diffScan.js\";\n+import { captureTest } from \"./core/testCapture.js\";\n+import { addDecision } from \"./core/decisionCapture.js\";\n+import { addRisk } from \"./core/riskCapture.js\";\n+import { writeWhyfile } from \"./core/whyfileBuilder.js\";\n+import { exportCache } from \"./core/cacheExport.js\";\n \n const program = new Command();\n \n+function collect(value: string, previous: string[]): string[] {\n+  return [...previous, value];\n+}\n+\n program\n   .name(\"backsolve\")\n   .description(\"Local-first AI work reconstruction engine.\")\n@@ -26,6 +37,91 @@ program.command(\"review\").action(() => {\n   console.log(JSON.stringify(session, null, 2));\n });\n \n+program.command(\"import-chat\")\n+  .argument(\"<file>\")\n+  .action((file: string) => {\n+    importChat(file);\n+    console.log(`Chat imported: ${file}`);\n+  });\n+\n+program.command(\"scan-diff\")\n+  .option(\"--base <ref>\", \"diff against a base ref instead of the working tree\")\n+  .action((options: { base?: string }) => {\n+    scanDiff(options.base);\n+    console.log(options.base ? `Diff scanned against ${options.base}` : \"Working tree diff scanned\");\n+  });\n+\n+program.command(\"add-test\")\n+  .argument(\"<command>\")\n+  .action((command: string) => {\n+    const { exitCode } = captureTest(command);\n+    console.log(`Test captured (exit ${exitCode}): ${command}`);\n+  });\n+\n+program.command(\"add-decision\")\n+  .requiredOption(\"--decision <text>\", \"what was decided\")\n+  .requiredOption(\"--rationale <text>\", \"why it was decided\")\n+  .option(\"--evidence <item>\", \"supporting evidence (repeatable)\", collect, [])\n+  .option(\"--confidence <level>\", \"confirmed | inferred | unsupported | contradicted | needs_review\")\n+  .option(\"--status <status>\", \"proposed | accepted | rejected | superseded\")\n+  .action((options: { decision: string; rationale: string; evidence: string[]; confidence?: string; status?: string }) => {\n+    addDecision(options);\n+    console.log(`Decision recorded: ${options.decision}`);\n+  });\n+\n+program.command(\"add-risk\")\n+  .requiredOption(\"--risk <text>\", \"what could go wrong\")\n+  .option(\"--severity <level>\", \"low | medium | high\")\n+  .option(\"--mitigation <text>\", \"how the risk is mitigated\")\n+  .option(\"--status <status>\", \"open | accepted | resolved\")\n+  .action((options: { risk: string; severity?: string; mitigation?: string; status?: string }) => {\n+    addRisk(options);\n+    console.log(`Risk recorded: ${options.risk}`);\n+  });\n+\n+program.command(\"set-outcome\")\n+  .argument(\"<text>\")\n+  .action((text: string) => {\n+    const session = getCurrentSession();\n+    session.outcome = text;\n+    saveSession(session);\n+    console.log(\"Outcome recorded.\");\n+  });\n+\n+program.command(\"add-question\")\n+  .argument(\"<text>\")\n+  .action((text: string) => {\n+    const session = getCurrentSession();\n+    session.unresolved_questions.push(text);\n+    saveSession(session);\n+    console.log(\"Unresolved question recorded.\");\n+  });\n+\n+program.command(\"add-next-action\")\n+  .argument(\"<text>\")\n+  .action((text: string) => {\n+    const session = getCurrentSession();\n+    session.next_actions.push(text);\n+    saveSession(session);\n+    console.log(\"Next action recorded.\");\n+  });\n+\n+program.command(\"whyfile\").action(() => {\n+  const session = getCurrentSession();\n+  const { whyfile, filePath } = writeWhyfile(session);\n+  console.log(`Whyfile written: ${filePath}`);\n+  console.log(`Reconstruction confidence: ${whyfile.reconstruction_confidence}`);\n+});\n+\n+const cache = program.command(\"cache\");\n+\n+cache.command(\"export\").action(() => {\n+  const session = getCurrentSession();\n+  const { whyfile } = writeWhyfile(session);\n+  const filePath = exportCache(session, whyfile);\n+  console.log(`Cache exported: ${filePath}`);\n+});\n+\n program.command(\"demo\").action(() => {\n   ensureProject();\n   const session = createSession(\"Demo reconstruction session\");\ndiff --git a/src/schema/session.ts b/src/schema/session.ts\nindex 9443a01..94dd0e0 100644\n--- a/src/schema/session.ts\n+++ b/src/schema/session.ts\n@@ -4,15 +4,19 @@ export const SessionSchema = z.object({\n   id: z.string(),\n   objective: z.string(),\n   created_at: z.string(),\n+  outcome: z.string().optional(),\n   chats: z.array(z.string()).default([]),\n   diffs: z.array(z.string()).default([]),\n   tests: z.array(z.object({\n     command: z.string(),\n     output: z.string(),\n+    exit_code: z.number(),\n     captured_at: z.string()\n   })).default([]),\n   decisions: z.array(z.string()).default([]),\n   risks: z.array(z.string()).default([]),\n+  unresolved_questions: z.array(z.string()).default([]),\n+  next_actions: z.array(z.string()).default([]),\n   notes: z.array(z.string()).default([])\n });\n \ndiff --git a/src/storage/projectStore.ts b/src/storage/projectStore.ts\nindex 6361082..fa73c0e 100644\n--- a/src/storage/projectStore.ts\n+++ b/src/storage/projectStore.ts\n@@ -42,6 +42,8 @@ export function createSession(objective: string): Session {\n     tests: [],\n     decisions: [],\n     risks: [],\n+    unresolved_questions: [],\n+    next_actions: [],\n     notes: []\n   };\n \n",
+      "# scope: working tree\n\ndiff --git a/.backsolve/current-session b/.backsolve/current-session\nindex 78424b2..6cacea6 100644\n--- a/.backsolve/current-session\n+++ b/.backsolve/current-session\n@@ -1 +1 @@\n-2026-05-14T22-08-23-645Z\n\\ No newline at end of file\n+2026-08-18T19-49-52-713Z\n\\ No newline at end of file\ndiff --git a/src/cli.ts b/src/cli.ts\nindex 44e4735..fb83b34 100644\n--- a/src/cli.ts\n+++ b/src/cli.ts\n@@ -1,9 +1,20 @@\n #!/usr/bin/env node\n import { Command } from \"commander\";\n-import { ensureProject, createSession, getCurrentSession } from \"./storage/projectStore.js\";\n+import { ensureProject, createSession, getCurrentSession, saveSession } from \"./storage/projectStore.js\";\n+import { importChat } from \"./core/chatImport.js\";\n+import { scanDiff } from \"./core/diffScan.js\";\n+import { captureTest } from \"./core/testCapture.js\";\n+import { addDecision } from \"./core/decisionCapture.js\";\n+import { addRisk } from \"./core/riskCapture.js\";\n+import { writeWhyfile } from \"./core/whyfileBuilder.js\";\n+import { exportCache } from \"./core/cacheExport.js\";\n \n const program = new Command();\n \n+function collect(value: string, previous: string[]): string[] {\n+  return [...previous, value];\n+}\n+\n program\n   .name(\"backsolve\")\n   .description(\"Local-first AI work reconstruction engine.\")\n@@ -26,6 +37,91 @@ program.command(\"review\").action(() => {\n   console.log(JSON.stringify(session, null, 2));\n });\n \n+program.command(\"import-chat\")\n+  .argument(\"<file>\")\n+  .action((file: string) => {\n+    importChat(file);\n+    console.log(`Chat imported: ${file}`);\n+  });\n+\n+program.command(\"scan-diff\")\n+  .option(\"--base <ref>\", \"diff against a base ref instead of the working tree\")\n+  .action((options: { base?: string }) => {\n+    scanDiff(options.base);\n+    console.log(options.base ? `Diff scanned against ${options.base}` : \"Working tree diff scanned\");\n+  });\n+\n+program.command(\"add-test\")\n+  .argument(\"<command>\")\n+  .action((command: string) => {\n+    const { exitCode } = captureTest(command);\n+    console.log(`Test captured (exit ${exitCode}): ${command}`);\n+  });\n+\n+program.command(\"add-decision\")\n+  .requiredOption(\"--decision <text>\", \"what was decided\")\n+  .requiredOption(\"--rationale <text>\", \"why it was decided\")\n+  .option(\"--evidence <item>\", \"supporting evidence (repeatable)\", collect, [])\n+  .option(\"--confidence <level>\", \"confirmed | inferred | unsupported | contradicted | needs_review\")\n+  .option(\"--status <status>\", \"proposed | accepted | rejected | superseded\")\n+  .action((options: { decision: string; rationale: string; evidence: string[]; confidence?: string; status?: string }) => {\n+    addDecision(options);\n+    console.log(`Decision recorded: ${options.decision}`);\n+  });\n+\n+program.command(\"add-risk\")\n+  .requiredOption(\"--risk <text>\", \"what could go wrong\")\n+  .option(\"--severity <level>\", \"low | medium | high\")\n+  .option(\"--mitigation <text>\", \"how the risk is mitigated\")\n+  .option(\"--status <status>\", \"open | accepted | resolved\")\n+  .action((options: { risk: string; severity?: string; mitigation?: string; status?: string }) => {\n+    addRisk(options);\n+    console.log(`Risk recorded: ${options.risk}`);\n+  });\n+\n+program.command(\"set-outcome\")\n+  .argument(\"<text>\")\n+  .action((text: string) => {\n+    const session = getCurrentSession();\n+    session.outcome = text;\n+    saveSession(session);\n+    console.log(\"Outcome recorded.\");\n+  });\n+\n+program.command(\"add-question\")\n+  .argument(\"<text>\")\n+  .action((text: string) => {\n+    const session = getCurrentSession();\n+    session.unresolved_questions.push(text);\n+    saveSession(session);\n+    console.log(\"Unresolved question recorded.\");\n+  });\n+\n+program.command(\"add-next-action\")\n+  .argument(\"<text>\")\n+  .action((text: string) => {\n+    const session = getCurrentSession();\n+    session.next_actions.push(text);\n+    saveSession(session);\n+    console.log(\"Next action recorded.\");\n+  });\n+\n+program.command(\"whyfile\").action(() => {\n+  const session = getCurrentSession();\n+  const { whyfile, filePath } = writeWhyfile(session);\n+  console.log(`Whyfile written: ${filePath}`);\n+  console.log(`Reconstruction confidence: ${whyfile.reconstruction_confidence}`);\n+});\n+\n+const cache = program.command(\"cache\");\n+\n+cache.command(\"export\").action(() => {\n+  const session = getCurrentSession();\n+  const { whyfile } = writeWhyfile(session);\n+  const filePath = exportCache(session, whyfile);\n+  console.log(`Cache exported: ${filePath}`);\n+});\n+\n program.command(\"demo\").action(() => {\n   ensureProject();\n   const session = createSession(\"Demo reconstruction session\");\ndiff --git a/src/schema/session.ts b/src/schema/session.ts\nindex 9443a01..94dd0e0 100644\n--- a/src/schema/session.ts\n+++ b/src/schema/session.ts\n@@ -4,15 +4,19 @@ export const SessionSchema = z.object({\n   id: z.string(),\n   objective: z.string(),\n   created_at: z.string(),\n+  outcome: z.string().optional(),\n   chats: z.array(z.string()).default([]),\n   diffs: z.array(z.string()).default([]),\n   tests: z.array(z.object({\n     command: z.string(),\n     output: z.string(),\n+    exit_code: z.number(),\n     captured_at: z.string()\n   })).default([]),\n   decisions: z.array(z.string()).default([]),\n   risks: z.array(z.string()).default([]),\n+  unresolved_questions: z.array(z.string()).default([]),\n+  next_actions: z.array(z.string()).default([]),\n   notes: z.array(z.string()).default([])\n });\n \ndiff --git a/src/storage/projectStore.ts b/src/storage/projectStore.ts\nindex 6361082..fa73c0e 100644\n--- a/src/storage/projectStore.ts\n+++ b/src/storage/projectStore.ts\n@@ -42,6 +42,8 @@ export function createSession(objective: string): Session {\n     tests: [],\n     decisions: [],\n     risks: [],\n+    unresolved_questions: [],\n+    next_actions: [],\n     notes: []\n   };\n \n"
+    ],
+    "tests": [
+      {
+        "command": "npx tsc --noEmit",
+        "output": "",
+        "exit_code": 0,
+        "captured_at": "2026-08-18T19:50:33.324Z"
+      },
+      {
+        "command": "npx tsc --noEmit",
+        "output": "",
+        "exit_code": 0,
+        "captured_at": "2026-08-18T19:52:30.486Z"
+      }
+    ]
+  }
+}
