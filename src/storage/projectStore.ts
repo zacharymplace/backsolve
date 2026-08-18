@@ -42,6 +42,8 @@ export function createSession(objective: string): Session {
     tests: [],
     decisions: [],
     risks: [],
+    unresolved_questions: [],
+    next_actions: [],
     notes: []
   };
 
