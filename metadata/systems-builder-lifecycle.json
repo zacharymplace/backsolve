@@ -1,0 +1,66 @@
+{
+  "schema_version": "systems-builder-lifecycle-v1",
+  "system_id": "backsolve",
+  "display_name": "Backsolve",
+  "phase": "operate",
+  "condition": "held",
+  "source": {
+    "repository": "zacharymplace/backsolve",
+    "path": ".",
+    "branch": "main",
+    "commit": "5443d4f"
+  },
+  "evidence": [
+    {
+      "kind": "validation",
+      "reference": "npm run check",
+      "result": "pass"
+    },
+    {
+      "kind": "build",
+      "reference": "npm run build",
+      "result": "pass"
+    },
+    {
+      "kind": "validation",
+      "reference": "npm run validate",
+      "result": "pass"
+    },
+    {
+      "kind": "demonstration",
+      "reference": "npm run demo",
+      "result": "pass"
+    },
+    {
+      "kind": "scope",
+      "reference": "README.md",
+      "result": "pass"
+    }
+  ],
+  "last_verified_at": "2026-08-21T19:10:59Z",
+  "next_action": {
+    "description": "Hold Backsolve as the validated v0.1 local-first AI work reconstruction engine. Resume development only when a concrete new reconstruction, import, evidence, review, export, interoperability, or integration requirement is explicitly adopted.",
+    "command": "npm run check"
+  },
+  "blockers": [
+    "No current bounded implementation objective remains open.",
+    "The documented v0.1 scope is implemented and validated.",
+    "Future expansion should follow an explicit successor requirement rather than speculative feature growth."
+  ],
+  "capabilities": [
+    "ai-work-reconstruction",
+    "whyfile-generation",
+    "manual-chat-import",
+    "git-diff-capture",
+    "test-command-capture",
+    "decision-capture",
+    "risk-capture",
+    "outcome-capture",
+    "human-review",
+    "next-action-capture",
+    "deterministic-synthesis",
+    "bscache-export",
+    "local-first-storage",
+    "repo-native-evidence"
+  ]
+}
