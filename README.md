@@ -18,7 +18,46 @@ Make AI-assisted work explain itself.
 - Whyfile generation
 - `.bscache` export
 
-## Quickstart
+## First run: generate a small Whyfile
+
+Requires Git, **Node.js 22 or newer**, and npm. This is a local v0.1 prototype;
+there is no hosted service, AI provider requirement, or published CLI install
+step. Run the example in this clone so generated records stay separate from
+another project's evidence.
+
+```bash
+git clone https://github.com/zacharymplace/backsolve.git
+cd backsolve
+npm ci
+npm run build
+node dist/cli.js init
+node dist/cli.js capture "Try the README example"
+node dist/cli.js add-decision --decision "Keep this trial local" --rationale "Inspect the artifact before sharing" --confidence confirmed --status accepted
+node dist/cli.js set-outcome "Generated a local example; no application behavior was validated"
+node dist/cli.js whyfile
+node dist/cli.js cache export
+```
+
+Expected final output (the session ID is a timestamp and varies):
+
+```text
+Whyfile written: .backsolve/whyfiles/<session-id>.why.md
+Reconstruction confidence: 0.4
+Cache exported: .backsolve/caches/<session-id>.bscache
+```
+
+Open the `.why.md` file to inspect the captured objective, outcome, decision, and
+rationale. This example deliberately has no chat, diff, or test evidence, which
+reduces the heuristic confidence score. The score is not a probability of
+correctness or independent verification.
+
+Generated records live in `.backsolve/` under the current working directory.
+Archives can contain imported chats, diffs, and command output; inspect them
+before sharing. `add-test` actually executes the supplied shell command; use
+only a command you intend to run. `npm run demo` only creates a session and is
+not a complete reconstruction demonstration.
+
+## Capture evidence for your own work
 
 ```bash
 npm install
