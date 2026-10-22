@@ -11,7 +11,8 @@ export const SessionSchema = z.object({
     command: z.string(),
     output: z.string(),
     exit_code: z.number(),
-    captured_at: z.string()
+    captured_at: z.string(),
+    tested_revision: z.string().optional()
   })).default([]),
   decisions: z.array(z.string()).default([]),
   risks: z.array(z.string()).default([]),

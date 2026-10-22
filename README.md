@@ -42,7 +42,8 @@ Expected final output (the session ID is a timestamp and varies):
 
 ```text
 Whyfile written: .backsolve/whyfiles/<session-id>.why.md
-Reconstruction confidence: 0.4
+Evidence-completeness score: 0.4
+Evidence-completeness heuristic (0–1), not a probability of truth, runtime readiness, or approval. Inferred rationale and missing historical telemetry can still score 1.0.
 Cache exported: .backsolve/caches/<session-id>.bscache
 ```
 
@@ -83,3 +84,53 @@ captured as you work, not inferred from the imported chat or scanned diff -- tho
 two are preserved as supporting evidence (`context_used` / `files_changed`), not
 parsed for rationale. There is no LLM/AI step in Whyfile generation; it is a
 deterministic assembly of what was explicitly captured.
+
+## Optional provenance sidecar (prototype)
+
+Whyfile schema 0.1 is unchanged. To attach provenance, create a JSON manifest
+with `provenance_version: "0.1"`, the active `session_id`,
+`reconstruction_mode` (`retrospective` or `contemporaneous`),
+`reconstructed_at` (ISO timestamp), `subject.repository`, and an `evidence`
+array. Each evidence entry has a stable `id`, relative `path`, SHA256 `sha256`,
+`kind` (`artifact`, `command_output`, `operator_report`, or `screenshot`), and
+`collected_at`. Optional `observed_at` stays absent when unknown; collection
+and reconstruction time must not substitute for historical observation time.
+Subject may also record `base_revision`, `release_revision`, and `tag`.
+
+Optional `claims` contain `id`, `claim`, `evidence_refs`, and `limitation`.
+Optional `validations` contain `command`, `exit_code`, `captured_at`,
+`evidence_ref`, and optional `tested_revision`. All references must resolve.
+Paths resolve relative to the manifest; traversal and escaping symlinks are rejected.
+
+```bash
+node dist/cli.js attach-provenance path/to/manifest.json
+node dist/cli.js review
+node dist/cli.js cache export
+node dist/cli.js cache verify .backsolve/caches/SESSION_ID.bscache
+```
+
+Attachment checks hashes and snapshots evidence bytes locally. Export writes a
+self-contained `SESSION_ID.provenance.json` beside the Whyfile and includes the
+same sidecar and evidence bytes in the cache. Exported sidecars can be attached
+again to the same session. Cache verification checks schema, evidence references,
+hashes, the bound Whyfile, and agreement between captured tests and provenance. It does not authenticate authorship or prove an
+operator's historical assertions. There is no general cache-to-session importer.
+Old caches remain readable without provenance; absence is reported explicitly.
+Exports include full captured test output with exit codes and timestamps. New
+command captures retain stdout and stderr (concatenated in that order; stream
+interleaving is not preserved). Existing captures cannot recover discarded output.
+`add-test '<command>' --revision <revision>` records a caller-supplied tested
+revision; omit it when unknown. Backsolve does not verify that assertion or
+infer it from the subject's release revision. These local bundles are not
+signed and have no size limit; inspect sources before attaching sensitive logs.
+
+### What the confidence score means
+
+`reconstruction_confidence` is a deterministic **evidence-completeness
+heuristic**, not a probability of truth, runtime readiness, or approval.
+It starts at 1.0 and deducts for missing tests (0.30), failing tests (0.20
+instead), missing chat (0.15), missing diff (0.15), and any unsupported,
+contradicted, or needs-review decision (0.20). Inferred decisions do not reduce
+it. A retrospective account with inferred rationale and missing historical
+telemetry can therefore score 1.0. Read the evidence and per-claim limitations;
+never use the score to authorize a release or declare product readiness.

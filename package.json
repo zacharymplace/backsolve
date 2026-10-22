@@ -12,7 +12,8 @@
     "dev": "tsx src/cli.ts",
     "check": "npm run build && npm run validate && npm run demo",
     "validate": "tsx src/validate/validateProject.ts",
-    "demo": "tsx src/cli.ts demo"
+    "demo": "tsx src/cli.ts demo",
+    "test": "npm run build && node --test test/*.test.mjs"
   },
   "dependencies": {
     "commander": "^12.1.0",

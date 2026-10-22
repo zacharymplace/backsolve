@@ -1,4 +1,7 @@
 #!/usr/bin/env node
+import fs from "node:fs";
+import { verifyCache } from "./core/cacheVerify.js";
+import { attachProvenance, loadProvenance, CONFIDENCE_NOTICE } from "./core/provenance.js";
 import { Command } from "commander";
 import { ensureProject, createSession, getCurrentSession, saveSession } from "./storage/projectStore.js";
 import { importChat } from "./core/chatImport.js";
@@ -34,7 +37,7 @@ program.command("capture")
 
 program.command("review").action(() => {
   const session = getCurrentSession();
-  console.log(JSON.stringify(session, null, 2));
+  console.log(JSON.stringify({ session, provenance: loadProvenance(session)?.manifest, confidence_notice: CONFIDENCE_NOTICE }, null, 2));
 });
 
 program.command("import-chat")
@@ -53,8 +56,9 @@ program.command("scan-diff")
 
 program.command("add-test")
   .argument("<command>")
-  .action((command: string) => {
-    const { exitCode } = captureTest(command);
+  .option("--revision <revision>", "explicit tested revision; omit when unknown")
+  .action((command: string, options: { revision?: string }) => {
+    const { exitCode } = captureTest(command, options.revision);
     console.log(`Test captured (exit ${exitCode}): ${command}`);
   });
 
@@ -110,8 +114,16 @@ program.command("whyfile").action(() => {
   const session = getCurrentSession();
   const { whyfile, filePath } = writeWhyfile(session);
   console.log(`Whyfile written: ${filePath}`);
-  console.log(`Reconstruction confidence: ${whyfile.reconstruction_confidence}`);
+  console.log(`Evidence-completeness score: ${whyfile.reconstruction_confidence}`);
+  console.log(CONFIDENCE_NOTICE);
 });
+
+program.command("attach-provenance")
+  .argument("<manifest>", "versioned provenance manifest with evidence paths relative to it")
+  .action((manifest: string) => {
+    attachProvenance(getCurrentSession(), manifest);
+    console.log("Provenance attached; hashes and references checked. This is not truth verification or approval.");
+  });
 
 const cache = program.command("cache");
 
@@ -121,6 +133,17 @@ cache.command("export").action(() => {
   const filePath = exportCache(session, whyfile);
   console.log(`Cache exported: ${filePath}`);
 });
+
+cache.command("verify")
+  .argument("<file>")
+  .action((file: string) => {
+    const bundle = JSON.parse(fs.readFileSync(file, "utf8"));
+    const { hasProvenance } = verifyCache(bundle);
+    console.log(hasProvenance
+      ? "Cache schema, provenance hashes and references verified. Historical assertions remain assertions."
+      : "Legacy cache schema valid; no provenance supplied.");
+    console.log(CONFIDENCE_NOTICE);
+  });
 
 program.command("demo").action(() => {
   ensureProject();
