@@ -138,3 +138,17 @@ never use the score to authorize a release or declare product readiness.
 ### Local build receipt
 
 `npm run build` cleans `dist/`, compiles TypeScript, and writes `dist/build-receipt.json` only after success. It records the Git revision and dirty state, source/configuration/package/build-script hashes, emitted JavaScript hashes, and Node/TypeScript versions. A failed build removes the prior receipt. The receipt is a trusted local observation, not independent reproducibility, authentication of installed dependencies, or an attestation of executed bytes. A dirty build is associated with its input hashes, not solely with the named commit.
+
+### Pinned rebuild comparison
+
+Run explicitly against a trusted local repository and exact commit:
+
+```sh
+npm run rebuild:compare -- /absolute/path/to/backsolve FULL_40_CHARACTER_COMMIT /absolute/path/to/build-receipt.json
+```
+
+This command clones into a disposable directory, checks out the commit, checks the receipt's complete source-input set, runs `npm ci --ignore-scripts --no-audit --no-fund`, and explicitly executes that commit's `scripts/build.mjs`. It rechecks source inputs after building, then compares the complete emitted JavaScript path/hash set with the supplied receipt. The original checkout and receipt are not modified; temporary files are removed. Network access and dependency installation may be required. Only use revisions whose build code you trust; the disposable directory is not a security sandbox.
+
+Results are `matches` (exit 0), `mismatch` (exit 1, with changed/missing/extra output paths), or `could_not_reproduce` (exit 2, with the failed stage). A dirty-source receipt, revision/input mismatch, different Node/compiler version, failed installation or failed build yields no reproduction claim. The report records the pinned revision and observed tool versions. Synthetic tests isolate failure handling; an actual dependency install and build are a separate check.
+
+A match supports reproducibility under the reported environment. It still trusts the compiler, dependencies and host; it neither authenticates the receipt nor attests executed verifier bytes. Source-to-build binding remains unverified. This command installs and writes files and is separate from Mission Control's read-only receipt check. It does not run the demo or advance lifecycle or execution authority.

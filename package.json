@@ -13,7 +13,8 @@
     "check": "npm run build && npm run validate && npm run demo",
     "validate": "tsx src/validate/validateProject.ts",
     "demo": "tsx src/cli.ts demo",
-    "test": "npm run build && node --test test/*.test.mjs"
+    "test": "npm run build && node --test test/*.test.mjs",
+    "rebuild:compare": "node scripts/rebuild-compare.mjs"
   },
   "dependencies": {
     "commander": "^12.1.0",
