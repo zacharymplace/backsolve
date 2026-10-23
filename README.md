@@ -134,3 +134,7 @@ contradicted, or needs-review decision (0.20). Inferred decisions do not reduce
 it. A retrospective account with inferred rationale and missing historical
 telemetry can therefore score 1.0. Read the evidence and per-claim limitations;
 never use the score to authorize a release or declare product readiness.
+
+### Local build receipt
+
+`npm run build` cleans `dist/`, compiles TypeScript, and writes `dist/build-receipt.json` only after success. It records the Git revision and dirty state, source/configuration/package/build-script hashes, emitted JavaScript hashes, and Node/TypeScript versions. A failed build removes the prior receipt. The receipt is a trusted local observation, not independent reproducibility, authentication of installed dependencies, or an attestation of executed bytes. A dirty build is associated with its input hashes, not solely with the named commit.

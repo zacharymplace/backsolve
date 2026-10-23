@@ -8,7 +8,7 @@
     "backsolve": "dist/cli.js"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "node scripts/build.mjs",
     "dev": "tsx src/cli.ts",
     "check": "npm run build && npm run validate && npm run demo",
     "validate": "tsx src/validate/validateProject.ts",
