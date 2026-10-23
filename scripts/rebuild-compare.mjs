@@ -51,6 +51,7 @@ export function compareRebuild({repository,revision,receiptPath},execute=run){
   if(built.version!=='backsolve-local-build-v1'||built.source_revision!==revision||built.node_version!==process.version||built.typescript_version!==compiler)throw Error('Unsupported rebuilt receipt');
   if(canonical(inputs())!==canonical(receipt.inputs))throw Error('Inputs changed during rebuild');
   if(canonical(built.inputs)!==canonical(receipt.inputs))throw Error('Input sets differ');
+  if(receipt.verifier_dependencies!==undefined && canonical(built.verifier_dependencies??{})!==canonical(receipt.verifier_dependencies))throw Error('Recorded dependency manifest differs');
   stage='compare';
   const outputs=Object.fromEntries(list('dist').filter(p=>p.endsWith('.js')).map(p=>[p,digest(fs.readFileSync(path.join(checkout,p)))]));
   const names=new Set([...Object.keys(outputs),...Object.keys(receipt.outputs)]);

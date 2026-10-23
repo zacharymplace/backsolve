@@ -20,7 +20,8 @@ test('comparison distinguishes output differences and unavailable reproduction w
   if(cmd==='npm'){if(mode==='install-fail')throw Error('offline');put(cwd,'node_modules/typescript/package.json',JSON.stringify({version:mode==='compiler-mismatch'?'other':'test'}));return '';}
   if(mode==='build-fail')throw Error('compile failed');
   if(mode==='mutate-input')put(cwd,'src/core.ts','changed');
-  put(cwd,'dist/build-receipt.json',JSON.stringify(receipt));
+  const built=structuredClone(receipt);if(mode==='dependency-mismatch')built.verifier_dependencies={version:'different'};
+  put(cwd,'dist/build-receipt.json',JSON.stringify(built));
   if(mode!=='missing')put(cwd,'dist/core/cacheVerify.js',mode==='changed'?'tampered':'output');
   if(mode==='extra')put(cwd,'dist/extra.js','extra');
   if(mode==='symlink-output'){fs.renameSync(path.join(cwd,'dist'),path.join(cwd,'output-backup'));fs.symlinkSync(path.join(cwd,'output-backup'),path.join(cwd,'dist'),'dir');}return '';
@@ -30,6 +31,7 @@ test('comparison distinguishes output differences and unavailable reproduction w
  for(mode of ['changed','missing','extra']){const r=compareRebuild(options,execute);assert.equal(r.status,'mismatch');assert.equal(r.differences[0].kind,mode);assert.equal(fs.existsSync(checkout),false);}
  for(mode of ['mutate-input','symlink-output','compiler-mismatch'])assert.equal(compareRebuild(options,execute).status,'could_not_reproduce');
  for(mode of ['install-fail','build-fail']){const r=compareRebuild(options,execute);assert.equal(r.status,'could_not_reproduce');assert.equal(r.stage,mode.split('-')[0]);assert.equal(fs.existsSync(checkout),false);}
+ receipt.verifier_dependencies={version:'fixture'};mode='match';save();assert.equal(compareRebuild(options,execute).status,'matches');mode='dependency-mismatch';assert.equal(compareRebuild(options,execute).status,'could_not_reproduce');delete receipt.verifier_dependencies;
  const removed=receipt.inputs['src/core.ts'];delete receipt.inputs['src/core.ts'];save();assert.equal(compareRebuild(options,execute).stage,'checkout');receipt.inputs['src/core.ts']=removed;
  receipt.source_dirty=true;save();assert.equal(compareRebuild(options,execute).stage,'validate');receipt.source_dirty=false;receipt.inputs['src/core.ts']=hash('wrong');save();assert.equal(compareRebuild(options,execute).stage,'checkout');
  assert.equal(execFileSync('git',['status','--porcelain'],{cwd:repo,encoding:'utf8'}),'');
