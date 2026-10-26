@@ -31,7 +31,7 @@ function localFile(root: string, relative: string): string {
   return file;
 }
 export function verifyBundle(raw: unknown, whyfile?: string): ProvenanceBundle {
-  const envelope = z.object({ manifest: ProvenanceSchema, files: z.record(z.string()) }).strict().parse(raw);
+  const envelope = z.object({ manifest: ProvenanceSchema, files: z.record(z.string(), z.string()) }).strict().parse(raw);
   const m = envelope.manifest, ids = new Set<string>();
   for (const e of m.evidence) {
     if (ids.has(e.id)) throw new Error(`Duplicate evidence ID: ${e.id}`);
